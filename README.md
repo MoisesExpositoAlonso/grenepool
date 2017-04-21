@@ -9,7 +9,7 @@ git clone https://github.com/MoisesExpositoAlonso/grenepool
 
 ### Pipeline steps
 
-| software | task |
+| SOFTWARE | TASK |
 | --- | --- |
 | skewer | Trimming & quality filter |
 | fastqc | Visualize quality |
