@@ -12,8 +12,8 @@ git clone https://github.com/MoisesExpositoAlonso/grenepool
 | SOFTWARE | TASK |
 | --- | --- |
 | skewer | Trimming & quality filter |
-| fastqc | Visualize quality |
-| Bwa mem | Mappint to reference |
+| fastqc | Visualize quality measurements |
+| Bwa mem | Mapping to reference |
 | Samtools | Alignment |
 | IGV |  Visualize alignment |
 | --- from here one probably customized --- |
