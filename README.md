@@ -3,6 +3,10 @@
 This repository contains the code necessary to run the genome-wide allele 
 frequency estimation from the data produced by grene-net.org consortium
 
+### Get it
+git clone https://github.com/MoisesExpositoAlonso/grenepool
+
+
 ### Pipeline steps
 
 | software | task |
