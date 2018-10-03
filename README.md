@@ -22,9 +22,9 @@ We start with a series of fastq files that we want to proceed for mapping to the
 | Bwa mem | Mapping to reference |
 | Samtools | Alignment |
 | IGV |  Visualize alignment |
-| --- from here one probably customized --- |
-| GATK |  SNP calling |
-| Bedtools |  Get coverage |
+| bamfreq | Extract base counts per position  |
+
+Probabilistic model to get frequency and estimate changes in time. The options might be CLEAR or PoPoolation.
 
 
 ### TO DO!

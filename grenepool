@@ -1,13 +1,13 @@
 #!/bin/bash
 #### Description: Pipeline for cleaning, mapping, and processing pool-seq pair end fastqc files.
-#### Required software: skewer - bwa - samtools
+#### Required software: skewer - bwa - samtools - bamfreq
 #### Written by:  Moises Exposito-Alonso moisesexpositoalonso@gmail.com on 05-2017
 
 
 # READ ARGUMENTS
 
 if test $# -eq 0
-    then 
+    then
      echo ""
      echo "=> No parameters defined!"
      echo ""
@@ -21,36 +21,37 @@ if test $# -eq 0
      exit 1
 fi
 
-
 samplename=$1
 inputfolder=$2
 outfolder=$3
 
+samfile=$outfolder"/"$samplename".sam"
+bamfile=$outfolder"/"$samplename".bam"
+freqfile=$outfolder"/"$samplename".freq"
 
-samfile=$samplename".sam"
-bamfile=$samplename".bam"
+# read1file="francoisfield_"$samplename"_L005_R1_001.fastq.gz"
+# read2name="francoisfield_"$samplename"_L005_R2_001.fastq.gz"
 
+read1file=$inputfolder"/"$samplename
+read2file=$inputfolder"/"$(echo $read1file | sed 's/R1/R2/g')
 
-read1name="francoisfield_"$samplename"_L005_R1_001.fastq.gz"
-read2name="francoisfield_"$samplename"_L005_R2_001.fastq.gz"
-
-read1file=$(find ../data -name $read1name)
-read2file=$(find ../data -name $read1name)
+# read1file=$(find ../data -name $read1name)
+# read2file=$(find ../data -name $read1name)
 
 
 ###############################################################################
 # clean: trimming & quality filter
 echo "clean: trimming & quality filter"
-skewer -m pe -t 10 $read1file $read2file -o $samplename
+skewer -m pe -t 10 $read1file $read2file -o $outfolder"/"$samplename
 
 # trimmed1=$(find ../data -name "*"$samplename"*trimmed-pair1*")
 # trimmed2=$(find ../data -name "*"$samplename"*trimmed-pair2*")
-trimmed1=$samplename'-trimmed-pair1.fastq'
-trimmed2=$samplename'-trimmed-pair2.fastq'
+trimmed1=$outfolder"/"$samplename'-trimmed-pair1.fastq'
+trimmed2=$outfolder"/"$samplename'-trimmed-pair2.fastq'
 
 
 ###############################################################################
-# check sequence quality with FastQC 
+# check sequence quality with FastQC
 
 # ~/Desktop/Files/Software/fastqc/FastQC/fastqc /home/ubuntu/Desktop/Files/Documents/Projects/Gre-Net_project/MPI_field/data/GT10_samples_2016/fastaq_files/trimmed_pairedend_S1/francoisfield_S1_L005_R1_001.fastq-trimmed-pair1.fastq /home/ubuntu/Desktop/Files/Documents/Projects/Gre-Net_project/MPI_field/data/GT10_samples_2016/fastaq_files/trimmed_pairedend_S1/francoisfield_S1_L005_R1_001.fastq-trimmed-pair2.fastq --extract -o /home/ubuntu/Desktop/Files/Documents/Projects/Gre-Net_project/MPI_field/data/GT10_samples_2016/fastaq_files/fastqc/paired-end/
 
@@ -62,10 +63,11 @@ if [! -f TAIR10_chr_all.fas]; then
 	echo 'do you want to download? [yes/no]'
 	read answer
 	if [$answer = 'yes']; then
-		# download from www.arabidopsis.org
-		bash downloadreference.sh
+    mkdir ref
+    # download from www.arabidopsis.org
+		bash wget https://www.arabidopsis.org/download_files/Genes/TAIR10_genome_release/TAIR10_chromosome_files/TAIR10_chr_all.fas ref/TAIR10_chr_all.fas
 		# index the fasta for later mapping
-		bwa index TAIR10_chr_all.fas  
+		bwa index TAIR10_chr_all.fas
 	else
 		echo "no reference genome provided, exiting now"
 		exit 1
@@ -73,8 +75,7 @@ if [! -f TAIR10_chr_all.fas]; then
 fi
 
 echo "mapping to reference"
-bwa mem TAIR10_chr_all.fas $trimmed1 $trimmed2 > $samfile
-
+bwa mem -t 10  ref/TAIR10_chr_all.fas $trimmed1 $trimmed2 > $samfile
 
 ###############################################################################
 # extra duplicates Picard tools picard.sourceforge.net
@@ -97,16 +98,14 @@ bwa mem TAIR10_chr_all.fas $trimmed1 $trimmed2 > $samfile
 
 echo "aligning"
 samtools view -S -b  $samfile >  $bamfile
-samtools sort  $bamfile  $bamfile"sorted"
-samtools index $bamfile"sorted".bam
-
+samtools sort  $bamfile > $bamfile".sorted.bam"
+samtools index $bamfile".sorted.bam"
 
 ###############################################################################
-# snp calling - NOT NECESSARY!
-#freebayes -f /data_input/index/TAIR10_chr_all.fas /data_output/S9/FieldExp_S9.sorted.bam > FieldExp_S9.freebayes.vcf
-
 # get the coverage per position  - customized tool by Clemens Weiss
 echo "allele counts per position"
-./pile freq -h -b $bamfile"sorted".bam
+freq -h $bamfile".sorted".bam > $freqfile
 
-
+###############################################################################
+# snp calling - not the aim here
+#freebayes -f /data_input/index/TAIR10_chr_all.fas /data_output/S9/FieldExp_S9.sorted.bam > FieldExp_S9.freebayes.vcf
