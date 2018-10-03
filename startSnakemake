@@ -1,0 +1,3 @@
+conda env create --name grenepool --file environment.yaml
+conda activate snakemake-tutorial
+snakemake --help
