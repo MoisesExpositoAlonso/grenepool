@@ -11,32 +11,26 @@ if test $# -eq 0
      echo ""
      echo "=> No parameters defined!"
      echo ""
-     echo "usage:   ./grenepool [samplename] [inputfolder] [outfolder]  "
-     echo "example: ./grenepool  S1  ../data . "
-     echo "       samplename: name of the sample, from S1 to S10"
-     echo "       inputfolder: path where the .fastaq.gz files are stored"
+     echo "usage:   ./grenepool [full path to sample] [outfolder]  "
+     echo "example: ./grenepool  ../data/S1.fastq.gz  out "
+     echo "       samplename: name of the sample fastq.gz. Provide the name of R1 in pair end reads"
      echo "       outfolder:   path where outputs will be printed"
      echo ""
 
      exit 1
 fi
 
-samplename=$1
-inputfolder=$2
-outfolder=$3
+
+outfolder=$2
+samplename=$(basename $1)
+
 
 samfile=$outfolder"/"$samplename".sam"
 bamfile=$outfolder"/"$samplename".bam"
 freqfile=$outfolder"/"$samplename".freq"
 
-# read1file="francoisfield_"$samplename"_L005_R1_001.fastq.gz"
-# read2name="francoisfield_"$samplename"_L005_R2_001.fastq.gz"
-
-read1file=$inputfolder"/"$samplename
-read2file=$inputfolder"/"$(echo $read1file | sed 's/R1/R2/g')
-
-# read1file=$(find ../data -name $read1name)
-# read2file=$(find ../data -name $read1name)
+read1file=$1
+read2file=$(echo $read1file | sed 's/R1/R2/g')
 
 
 ###############################################################################
@@ -104,7 +98,7 @@ samtools index $bamfile".sorted.bam"
 ###############################################################################
 # get the coverage per position  - customized tool by Clemens Weiss
 echo "allele counts per position"
-freq -h $bamfile".sorted".bam > $freqfile
+freq -h -c 10 $bamfile".sorted".bam > $freqfile
 
 ###############################################################################
 # snp calling - not the aim here
