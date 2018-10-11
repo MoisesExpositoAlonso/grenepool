@@ -1,4 +1,6 @@
+ref/TAIR*
+out/*
 trash/*
-
-
+*.bam
+pile
 
