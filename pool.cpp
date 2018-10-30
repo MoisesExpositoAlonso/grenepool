@@ -85,23 +85,14 @@ int countfilerows(string FILE_NAME){
 class Hash{
   public:
     map<string,string> mm;
-    string outfile;
-    string samplefile;
+
     // member function declarations
-    void setfile(string filename);
     void addontop(string key,string val);
     void newadd(string key,string val);
     void printhash();
+    void writehash(string outfile);
 };
 // member functions definitions
-void Hash::setfile(string filename){
-  string outfile=filename,
-  stirng samplefile=filename;
-
-  samplefile.append(".sample");
-  outfile.append('.fvcf')
-}
-
 void Hash::addontop(string key,string val){
     if ( mm.find(key) != mm.end()){
       // found
@@ -131,23 +122,75 @@ void Hash::printhash(void){
         it++;
       }
   }
+  void Hash::writehash(string outfile){
+        ofstream myfile;
+        myfile.open (outfile);
 
-  // int main () {
-  //   ofstream myfile;
-  //   myfile.open ("example.txt");
-  //   myfile << "Writing this to a file.\n";
-  //   myfile.close();
-  //   return 0;
-  // }
+        map<string, string>::iterator it = mm.begin();
+        while(it != mm.end()){
+          string genotype = it->second;
+          string index = it->first;
+          char chr = index.at(0);
+          string pos = index.erase(0,0);
+
+          if(genotype.find('-') != std::string::npos){
+            std::replace( genotype.begin(), genotype.end(), '-', '\t'); //
+            myfile<<chr<<"\t"<<pos<<"\t"<<genotype<<"\n";
+          } // only if there are more than 1 genotype
+          it++;
+        }
+
+        myfile.close();
+    }
 
 
-class Samples:
-  private ss vector<string>
-     Samples();
-     add samples
-     write to file
+////////////////////////////////////////////////////////////////////////////////
+// formating functions
+char base(int p){
+  char b;
+  switch (p){
+    case 0: b='A';
+      break;
+    case 1: b='C';
+      break;
+    case 2: b='G';
+      break;
+    case 3: b='T';
+      break;
+  }
+  return(b);
 }
 
+string formatkey( int a[]){
+  char newkey[50];
+  int n;
+  n=sprintf (newkey, "%d%d", a[0], a[1]);
+  return(newkey);
+}
+string formatval_vcf(int a[]){
+  char newval[50];
+  int n;
+  n=sprintf (newval, "%d:%d:%d:%d", a[3],a[4],a[5],a[6]);
+  return(newval);
+}
+
+string formatval_maf(int a[]){
+  char newval[50];
+  int mymax = a[3];
+  int loc=3;
+  for (int i = 3; i < 7; i++){
+    if (a[i] > mymax){
+      mymax = a[i];
+      loc=i;
+  }}
+  char b = base(loc-3);
+  // frequency
+  int cov=a[2];
+  int n;
+  float f = (float)mymax / (float)cov;
+  n=sprintf (newval, "%c%f",b,f);
+  return(newval);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,26 +198,24 @@ class Samples:
 // Open file and read int matrix
 // remember order Seq	Pos	Cov	#A	#C	#G	#T	#N	#D
 
+
 int main(int argc, char *argv[]){
 
   //// Handle lack of arguments
-  if (argc <=2){
+  if (argc <=2 || argc<4 ){
 		// if (argv[0])
 		// 	std::cout << "Usage: " << argv[0] << " <filename>.freq" << '\n';
 		// else
-			std::cout << "Usage: pool <outname> <filename>.freq" << '\n';
+			std::cout << "Usage: pool <outname> <filename1>.freq <filename2>.freq ..." << '\n';
 		exit(1);
 	}
-  // define printing file
-  string outfile=argv[1];
+
   // initialize Hash
   Hash m;
-  m.setfile(outfile);
 
   //// iterate over files
-  int countfiles=0;
   for (int i = 2; i < argc; ++i)  {
-      // printf("argv[%d]: %s\n", i, argv[i]);
+      printf("reading file argument %d: %s\n", i, argv[i]);
 
       //// read file function
       std::ifstream inputFile(argv[i]);
@@ -186,47 +227,34 @@ int main(int argc, char *argv[]){
           for(int j=0; j< Cols; j++){
             inputFile >> a[j];
           }
-          char newkey[50];
-          char newval[50];
-          int n1, n2;
-            n1=sprintf (newkey, "%d%d", a[0], a[1]);
-            n2=sprintf (newval, "%d:%d:%d:%d", a[3],a[4],a[5],a[6]);
-          if (countfiles==0){
+
+          string newkey = formatkey(a);
+          string newval= formatval_maf(a);
+
+          if (i==2){
             m.newadd(newkey,newval);
           }else{
             m.addontop(newkey,newval);
           }
       }
-
-      countfiles++;
   } // end files
+  printf("writing hash to file\n");
 
   //// Output intersect hash
-  m.printhash();
+  string outfile=argv[1];
+  string extension1=".fvcf";
+  outfile.append(extension1);
+  m.writehash(outfile);
+
 
   //// Output samples
-  vector<string> Samples;
-  for (int i = 2; i < argc; ++i) samples.push_back(argv[i]);
-  string samplesfile=outfile.append('');
-    int main () {
-      ofstream myfile;
-      myfile.open ("example.txt");
-      myfile << "Writing this to a file.\n";
-      myfile.close();
-      return 0;
-    }
+  string samplefile=argv[1];
+  string extension2=".samples";
+  samplefile.append(extension2);
+  ofstream myfile;
+  myfile.open(samplefile);
+  for (int i = 2; i < argc; ++i) myfile <<argv[i] << "\n";
+  myfile.close();
 
-  // delete [] a;
   return(1);
 }
-
-
-// int** a = new int*[Rows];
-//   for(int i = 0; i < Rows; ++i){
-//       a[i] = new int[Cols];
-//       for(int j=0; j< Cols; j++){
-//         inputFile >> a[i][j];
-//         // cout << a[i][j] << '\t';
-//       }
-//       // cout << '\n';
-//   }

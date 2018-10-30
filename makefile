@@ -1,13 +1,14 @@
 CXX= g++
-CXXFLAGS= -Wall -g
-
-OBJS= pool.o utils.o
+CXXFLAGS= -Wall -g -pedantic
+OBJS= pool.o
+# OBJS= pool.o utils.o
+# LIB= -Lhtslib -lhts -lpthread -lz -lm
 
 .c.o:
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 pool: $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
 
 clean:
 	rm -f $(OBJS)
