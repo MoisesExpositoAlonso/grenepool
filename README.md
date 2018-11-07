@@ -3,16 +3,6 @@
 This repository contains the code necessary to run the genome-wide allele 
 frequency estimation from the data produced by grene-net.org consortium.
 
-### Pilot experiment
-
-Particularly, Illumina HiSeq data from pooled samples of Arabidopsis thaliana 
-collected in 2016 in three experimental plots at MPI-Tuebingen.
-
-In total there are 451 accessions that have been sown in 2014. The progeny (2nd generation) has been harvested in 2016 (pools of flower heads of ca 50-200 individuals from each plot). 
-Description of the samples with IDs is available in Table_IDseq.
-
-We start with a series of fastq files that we want to proceed for mapping to the reference, filtering bad quality, SNP calling and SNP filtering.
-
 ### Pipeline steps
 
 | SOFTWARE | TASK |
@@ -23,16 +13,34 @@ We start with a series of fastq files that we want to proceed for mapping to the
 | Samtools | Alignment |
 | IGV |  Visualize alignment |
 | bamfreq | Extract base counts per position  |
+| pool | Read two or more base count files and generate a fvcf |
 
-Probabilistic model to get frequency and estimate changes in time. The options might be CLEAR or PoPoolation.
-
-
-### TO DO!
-Dedicated software to build reproducible pipelines
-
-http://slowkow.com/notes/snakemake-tutorial/
-http://snakemake.bitbucket.org/snakemake-tutorial.html
+All steps up until pool are wrapped in the script grenepool.py which is 
+awared of output files and, if the run failed, would start from
+the last keystone intermediate file unless forced.
 
 ### Get the code
+```bash
 git clone https://github.com/MoisesExpositoAlonso/grenepool
+cd grenepool
+make
+
+# to prompt help from the two main programs
+./grenepool
+./pool
+
+```
+
+### To run analyses
+
+```bash
+./grenepool.py <yourfile.fastq.gz> 
+./pool <outputname> <file1.freq> <file2.freq> ...
+
+```
+
+
+#### TO DO!
+Probabilistic model to get frequency and estimate changes in time. Two 
+previous softares  options might be CLEAR or PoPoolation.
 

@@ -115,14 +115,17 @@ void Hash::printhash(void){
         string genotype = it->second;
         string index = it->first;
         char chr = index.at(0);
-        string pos = index.erase(0,0);
+        string pos = index.erase(0,1);
 
-        if(genotype.find('-') != std::string::npos) // only if there are more than 1 genotype
+        if(genotype.find('-') != std::string::npos){ // only if there are more than 1 genotype
+          std::replace( genotype.begin(), genotype.end(), '-', '\t'); //
           std::cout<<chr<<"\t"<<pos<<"\t"<<genotype<<std::endl;
+        } // only if there are more than 1 genotype
         it++;
       }
   }
   void Hash::writehash(string outfile){
+      printf("writing hash to file\n");
         ofstream myfile;
         myfile.open (outfile);
 
@@ -131,7 +134,7 @@ void Hash::printhash(void){
           string genotype = it->second;
           string index = it->first;
           char chr = index.at(0);
-          string pos = index.erase(0,0);
+          string pos = index.erase(0,1);
 
           if(genotype.find('-') != std::string::npos){
             std::replace( genotype.begin(), genotype.end(), '-', '\t'); //
@@ -212,33 +215,36 @@ int main(int argc, char *argv[]){
 
   // initialize Hash
   Hash m;
-
+  int counter=0;
   //// iterate over files
-  for (int i = 2; i < argc; ++i)  {
-      printf("reading file argument %d: %s\n", i, argv[i]);
+  for (int e = 2; e < argc; ++e)  {
+      // printf("reading file argument %d: %s\n", e, argv[e]);
 
       //// read file function
-      std::ifstream inputFile(argv[i]);
-      const int Rows=countfilerows(argv[i]) -1; // cause array starts 0
+      std::ifstream inputFile(argv[e]);
+      const int Rows=countfilerows(argv[e]) -1; // cause array starts 0
       const int Cols=9;
+      // printf("file contains %d rows \n", Rows);
+
 
       for(int i = 0; i < Rows; ++i){
+        // printf("reading row %d\n", i);
           int a[9];
           for(int j=0; j< Cols; j++){
             inputFile >> a[j];
           }
-
           string newkey = formatkey(a);
           string newval= formatval_maf(a);
-
-          if (i==2){
+          // string newval= formatval_vcf(a);
+          if (counter==0){
             m.newadd(newkey,newval);
           }else{
             m.addontop(newkey,newval);
           }
-      }
+      } // end rows
+      counter++;
+
   } // end files
-  printf("writing hash to file\n");
 
   //// Output intersect hash
   string outfile=argv[1];
@@ -246,6 +252,8 @@ int main(int argc, char *argv[]){
   outfile.append(extension1);
   m.writehash(outfile);
 
+  //// laternatively print
+  // m.printhash();
 
   //// Output samples
   string samplefile=argv[1];

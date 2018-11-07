@@ -66,17 +66,18 @@ freqfile="".join((args.out,'/',samplename,'.freq'))
 ref=args.ref
 
 
-def figurestage(args,read1,read2,trimmed1,trimmed2, samfile,bamsortfile,freqfile):
+def figurestage(args,read1,read2,trimmed1,trimmed2, samfile,bamfile,bamsortfile,freqfile):
     read1bool=os.path.exists(read1)
     read2bool=os.path.exists(read2)
     trim1bool= os.path.exists(trimmed1)
     trim2bool= os.path.exists(trimmed2)
     sambool= os.path.exists(samfile)
-    bambool= os.path.exists(bamsortfile)
+    bambool= os.path.exists(bamfile)
+    bamsortbool= os.path.exists(bamsortfile)
     freqfile= os.path.exists(freqfile)
 
     start=0
-    if bambool:
+    if bambool & bamsortbool:
         print('Starting after aligning')
         start=3
     elif sambool:
@@ -84,7 +85,7 @@ def figurestage(args,read1,read2,trimmed1,trimmed2, samfile,bamsortfile,freqfile
         start=2
     elif trim1bool & trim2bool:
         print('Starting after QC')
-        start=2
+        start=1
     elif read1bool & read2bool:
         print('Starting pipeline')
     else:
@@ -104,6 +105,7 @@ def qc(read1,read2,outsample):
 
     cmd='skewer -m pe -t 10 %s %s -o %s' %(read1,read2,outsample)
     try:
+        print('running -> %s' %(cmd))
         p=subprocess.run(cmd,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with skewer program call -- manually check!")
@@ -115,6 +117,7 @@ def map2reference(ref,trimmed1,trimmed2,samfile):
     print("map to reference (sam file)...\n")
     cmd= 'bwa mem -t 10  %s %s %s > %s' %(ref,trimmed1,trimmed2,samfile)
     try:
+        print('running -> %s' %(cmd))
         p=subprocess.run(cmd,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with bwa mem program call -- manually check!")
@@ -128,14 +131,17 @@ def alignindex(samfile,bamfile):
     cmd2='samtools sort  %s > %s".sorted.bam"'% (bamfile,bamfile)
     cmd3='samtools index %s".sorted.bam"'% (bamfile)
     try:
+        print('running -> %s' %(cmd1))
         p1=subprocess.run(cmd1,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with samtools view program call -- manually check!")
     try:
+        print('running -> %s' %(cmd2))
         p2=subprocess.run(cmd2,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with samtools sort call -- manually check!")
     try:
+        print('running -> %s' %(cmd3))
         p3=subprocess.run(cmd3,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with samtools index call -- manually check!")
@@ -144,10 +150,12 @@ def alignindex(samfile,bamfile):
 
 def bamfreq(bamfile,freqfile):
     print ('\n......................................................................................\n')
-    print("counting bases ... \n")
+    print("Counting bases in .bam file... \n")
 
-    cmd='freq -h -c 10 %s".sorted.bam" > %s' %(bamfile,freqfile)
+    #cmd='freq -h -f 0.02 -c 100 %s.sorted.bam > %s' %(bamfile,freqfile)
+    cmd='freq -h -f 0.02 -c 20 %s.sorted.bam > %s' %(bamfile,freqfile)
     try:
+        print('running -> %s' %(cmd))
         p=subprocess.run(cmd,shell=True)
     except subprocess.CalledProcessError as suberror:
         raise ("Problem with custom freq tool -- manually check!")
@@ -164,13 +172,13 @@ def cleanintermediate(args,trimmed1,trimmed2,sam,bam):
         print(cm1)
         print(cm2)
         print(cm3)
-        print(cm4)
+        # print(cm4)
         subprocess.call(cm1,shell=True)
         subprocess.call(cm2,shell=True)
         subprocess.call(cm3, shell=True)
-        subprocess.call(cm4, shell=True)
+        # subprocess.call(cm4, shell=True)
 
-success=[-9,-9,-9,-9] # to keep track of successes
+success=['NotApply','NotApply','NotApply','NotApply'] # to keep track of successes
 def runstep (args,start,read1,read2,outsample,ref,trimmed1,trimmed2,samfile,bamfile,freqfile):
     if start == 0:
         success[start]= qc(read1,read2,outsample)
@@ -186,7 +194,7 @@ def runstep (args,start,read1,read2,outsample,ref,trimmed1,trimmed2,samfile,bamf
 
 ##########################################################################################
 # define stage to start analysis
-start=figurestage(args,read1,read2,trimmed1,trimmed2, samfile,bamfile,freqfile)
+start=figurestage(args,read1,read2,trimmed1,trimmed2, samfile,bamfile,bamsortfile,freqfile)
 start=int(start)
 print("Starting position %s" % start)
 
@@ -206,3 +214,5 @@ print('Trimming and quality filter - exit code = %s' %success[0])
 print('Mapping to reference - exit code = %s' %success[0])
 print('Aligning and indexing - exit code = %s' %success[0])
 print('Counting bases - exit code = %s' %success[0])
+print ('END')
+print ('\n......................................................................................\n')
