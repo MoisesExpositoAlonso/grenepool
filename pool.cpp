@@ -181,17 +181,20 @@ string formatval_maf(int a[]){
   char newval[50];
   int mymax = a[3];
   int loc=3;
+  int cov=0;
+  // positions here are .freq file specific
   for (int i = 3; i < 7; i++){
+    cov += a[i]; // last modififed
     if (a[i] > mymax){
       mymax = a[i];
       loc=i;
   }}
   char b = base(loc-3);
   // frequency
-  int cov=a[2];
+  //int cov=a[2]; //this would be coverage counting low N/D
   int n;
   float f = (float)mymax / (float)cov;
-  n=sprintf (newval, "%c%f",b,f);
+  n=sprintf (newval, "%i\t%c\t%f",cov,b,f);
   return(newval);
 }
 
